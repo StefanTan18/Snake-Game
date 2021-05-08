@@ -45,6 +45,10 @@ public class SnakeEngine extends SurfaceView implements Runnable {
     private int appleX;
     private int appleY;
 
+    // Location of the Poisoned Apple
+    private int poisonedX;
+    private int poisonedY;
+
     // The size in pixels of a snake segment
     private int blockSize;
 
@@ -62,6 +66,8 @@ public class SnakeEngine extends SurfaceView implements Runnable {
 
     // How many points does the player have
     private int score;
+    // The high score of the current session
+    private int highScore;
 
     // The location in the grid of all the segments
     private int[] snakeXs;
@@ -160,10 +166,14 @@ public class SnakeEngine extends SurfaceView implements Runnable {
         snakeXs[0] = NUM_BLOCKS_WIDE / 2;
         snakeYs[0] = numBlocksHigh / 2;
 
-        // Gets the Apple ready for dinner
+        // Gets the Apple and the Poisoned Apple ready for dinner
         spawnApple();
+        spawnPoison();
 
-        // Reset the score
+        // Reset the score and updates high score if needed
+        if (score > highScore) {
+            highScore = score;
+        }
         score = 0;
 
         // Setup nextFrameTime so an update is triggered
@@ -177,7 +187,6 @@ public class SnakeEngine extends SurfaceView implements Runnable {
     }
 
     private void eatApple(){
-        //  Got him!
         // Increase the size of the snake
         snakeLength++;
         //replace Apple
@@ -185,6 +194,21 @@ public class SnakeEngine extends SurfaceView implements Runnable {
         //add to the score
         score = score + 1;
         soundPool.play(eat_apple, 1, 1, 0, 0, 1);
+    }
+
+    public void spawnPoison() {
+        SecureRandom sRand = new SecureRandom();
+        poisonedX = sRand.nextInt(NUM_BLOCKS_WIDE - 1) + 1;
+        poisonedY = sRand.nextInt(numBlocksHigh - 1) + 1;
+    }
+
+    private void eatPoison(){
+        // Decrease the size of the snake
+        snakeLength--;
+        //replace Poisoned Apple
+        spawnPoison();
+        //subtract from the score
+        score = score - 1;
     }
 
     private void moveSnake(){
@@ -223,11 +247,14 @@ public class SnakeEngine extends SurfaceView implements Runnable {
         // Has the snake died?
         boolean dead = false;
 
+        // Ate poisoned apple when the length of snake is 1
+        if(snakeLength == 0) dead = true;
+
         // Hit the screen edge
         if (snakeXs[0] == -1) dead = true;
-        if (snakeXs[0] >= NUM_BLOCKS_WIDE) dead = true;
+        if (snakeXs[0] > NUM_BLOCKS_WIDE + 1) dead = true;
         if (snakeYs[0] == -1) dead = true;
-        if (snakeYs[0] == numBlocksHigh) dead = true;
+        if (snakeYs[0] > numBlocksHigh) dead = true;
 
         // Eaten itself?
         for (int i = snakeLength - 1; i > 0; i--) {
@@ -240,9 +267,14 @@ public class SnakeEngine extends SurfaceView implements Runnable {
     }
 
     public void update() {
-        // Did the head of the snake eat Apple?
+        // Did the head of the snake eat the apple?
         if (snakeXs[0] == appleX && snakeYs[0] == appleY) {
             eatApple();
+        }
+
+        // Did the head of the snake eat the poisoned apple?
+        if (snakeXs[0] == poisonedX && snakeYs[0] == poisonedY) {
+            eatPoison();
         }
 
         moveSnake();
@@ -268,7 +300,8 @@ public class SnakeEngine extends SurfaceView implements Runnable {
 
             // Scale the HUD text
             paint.setTextSize(90);
-            canvas.drawText("Score:" + score, 10, 70, paint);
+            canvas.drawText("Score:" + score, 10, 75, paint);
+            canvas.drawText("High Score:" + highScore, screenX - 550, 75, paint);
 
             // Draw the snake one block at a time
             for (int i = 0; i < snakeLength; i++) {
@@ -287,6 +320,16 @@ public class SnakeEngine extends SurfaceView implements Runnable {
                     (appleY * blockSize),
                     (appleX * blockSize) + blockSize,
                     (appleY * blockSize) + blockSize,
+                    paint);
+
+            // Set the color of the paint to draw Poisoned Apple green
+            paint.setColor(Color.argb(255, 0, 255, 0));
+
+            // Draw Poisoned Apple
+            canvas.drawRect(poisonedX * blockSize,
+                    (poisonedY * blockSize),
+                    (poisonedX * blockSize) + blockSize,
+                    (poisonedY * blockSize) + blockSize,
                     paint);
 
             // Unlock the canvas and reveal the graphics for this frame
@@ -314,39 +357,38 @@ public class SnakeEngine extends SurfaceView implements Runnable {
     @Override
     public boolean onTouchEvent(MotionEvent motionEvent) {
 
-        switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
-            case MotionEvent.ACTION_UP:
-                if (motionEvent.getX() >= screenX / 2) {
-                    switch(heading){
-                        case UP:
-                            heading = Heading.RIGHT;
-                            break;
-                        case RIGHT:
-                            heading = Heading.DOWN;
-                            break;
-                        case DOWN:
-                            heading = Heading.LEFT;
-                            break;
-                        case LEFT:
-                            heading = Heading.UP;
-                            break;
-                    }
-                } else {
-                    switch(heading){
-                        case UP:
-                            heading = Heading.LEFT;
-                            break;
-                        case LEFT:
-                            heading = Heading.DOWN;
-                            break;
-                        case DOWN:
-                            heading = Heading.RIGHT;
-                            break;
-                        case RIGHT:
-                            heading = Heading.UP;
-                            break;
-                    }
+        if ((motionEvent.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP) {
+            if (motionEvent.getX() >= screenX / 2) {
+                switch (heading) {
+                    case UP:
+                        heading = Heading.RIGHT;
+                        break;
+                    case RIGHT:
+                        heading = Heading.DOWN;
+                        break;
+                    case DOWN:
+                        heading = Heading.LEFT;
+                        break;
+                    case LEFT:
+                        heading = Heading.UP;
+                        break;
                 }
+            } else {
+                switch (heading) {
+                    case UP:
+                        heading = Heading.LEFT;
+                        break;
+                    case LEFT:
+                        heading = Heading.DOWN;
+                        break;
+                    case DOWN:
+                        heading = Heading.RIGHT;
+                        break;
+                    case RIGHT:
+                        heading = Heading.UP;
+                        break;
+                }
+            }
         }
         return true;
     }
