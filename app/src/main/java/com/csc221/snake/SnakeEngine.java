@@ -301,7 +301,7 @@ public class SnakeEngine extends SurfaceView implements Runnable {
             // Scale the HUD text
             paint.setTextSize(90);
             canvas.drawText("Score:" + score, 10, 75, paint);
-            canvas.drawText("High Score:" + highScore, screenX - 550, 75, paint);
+            canvas.drawText("High Score:" + highScore, screenX - 600, 75, paint);
 
             // Draw the snake one block at a time
             for (int i = 0; i < snakeLength; i++) {
