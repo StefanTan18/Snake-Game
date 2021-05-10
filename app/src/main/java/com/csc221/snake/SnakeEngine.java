@@ -86,10 +86,17 @@ public class SnakeEngine extends SurfaceView implements Runnable {
     // Some paint for our canvas
     private Paint paint;
 
+    // Used to pause in between rounds
+    private Object pauseLock;
+    private boolean paused;
+
     public SnakeEngine(Context context, Point size) {
         super(context);
 
         context = context;
+
+        pauseLock = new Object();
+        paused = false;
 
         screenX = size.x;
         screenY = size.y;
@@ -142,6 +149,29 @@ public class SnakeEngine extends SurfaceView implements Runnable {
                 draw();
             }
 
+            synchronized (pauseLock) {
+                while (paused) {
+                    try {
+                        pauseLock.wait();
+                    } catch (InterruptedException ie) {
+                    }
+                }
+            }
+        }
+    }
+
+    // Pauses the looping thread
+    public void onPause() {
+        synchronized (pauseLock) {
+            paused = true;
+        }
+    }
+
+    // Resumes the looping thread
+    public void onResume() {
+        synchronized (pauseLock) {
+            paused = false;
+            pauseLock.notifyAll();
         }
     }
 
@@ -282,7 +312,7 @@ public class SnakeEngine extends SurfaceView implements Runnable {
         if (detectDeath()) {
             //start again
             soundPool.play(snake_crash, 1, 1, 0, 0, 1);
-
+            onPause();
             newGame();
         }
     }
@@ -358,6 +388,8 @@ public class SnakeEngine extends SurfaceView implements Runnable {
     public boolean onTouchEvent(MotionEvent motionEvent) {
 
         if ((motionEvent.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP) {
+            // resumes the thread if it was paused
+            onResume();
             if (motionEvent.getX() >= screenX / 2) {
                 switch (heading) {
                     case UP:
