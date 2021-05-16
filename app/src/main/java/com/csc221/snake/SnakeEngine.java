@@ -24,7 +24,7 @@ public class SnakeEngine extends SurfaceView implements Runnable {
     // To hold a reference to the Activity
     private Context context;
 
-    // for playing sound effects
+    // For playing sound effects
     private SoundPool soundPool;
     private int eat_apple = -1;
     private int snake_crash = -1;
@@ -62,14 +62,13 @@ public class SnakeEngine extends SurfaceView implements Runnable {
     private final long FPS = 10;
     // There are 1000 milliseconds in a second
     private final long MILLIS_PER_SECOND = 1000;
-// We will draw the frame much more often
 
     // How many points does the player have
     private int score;
     // The high score of the current session
     private int highScore;
 
-    // The location in the grid of all the segments
+    // The location in the grid of the snake segments
     private int[] snakeXs;
     private int[] snakeYs;
 
@@ -77,13 +76,13 @@ public class SnakeEngine extends SurfaceView implements Runnable {
 // Is the game currently playing?
     private volatile boolean isPlaying;
 
-    // A canvas for our paint
+    // A canvas for the paint
     private Canvas canvas;
 
     // Required to use canvas
     private SurfaceHolder surfaceHolder;
 
-    // Some paint for our canvas
+    // Paint for the canvas
     private Paint paint;
 
     // Used to pause in between rounds
@@ -143,12 +142,13 @@ public class SnakeEngine extends SurfaceView implements Runnable {
 
         while (isPlaying) {
 
-            // Update 10 times a second
+            // Updates 10 times a second
             if(updateRequired()) {
                 update();
                 draw();
             }
 
+            // For pausing the thread
             synchronized (pauseLock) {
                 while (paused) {
                     try {
@@ -196,7 +196,7 @@ public class SnakeEngine extends SurfaceView implements Runnable {
         snakeXs[0] = NUM_BLOCKS_WIDE / 2;
         snakeYs[0] = numBlocksHigh / 2;
 
-        // Gets the Apple and the Poisoned Apple ready for dinner
+        // Gets the Apple and the Poisoned Apple ready
         spawnApple();
         spawnPoison();
 
