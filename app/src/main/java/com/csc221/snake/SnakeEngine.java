@@ -31,7 +31,7 @@ public class SnakeEngine extends SurfaceView implements Runnable {
 
     // For tracking movement Heading
     public enum Heading {UP, RIGHT, DOWN, LEFT}
-    // Start by heading to the right
+    // Default heading is to the right
     private Heading heading = Heading.RIGHT;
 
     // To hold the screen size in pixels
